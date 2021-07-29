@@ -19,6 +19,12 @@ namespace WowMythicScanner
                 .AddEnvironmentVariables()
                 .Build();
 
+            var apiConfiguration = new ApiConfiguration
+            {
+                Locale = ApiLocale.fr_FR,
+                Region = ApiRegion.Europe
+            };
+
             var builder = new HostBuilder()
                 .ConfigureServices((hostContext, services) =>
                 {
@@ -27,17 +33,18 @@ namespace WowMythicScanner
                     services.AddScoped<IApiTokenProvider, ApiAuthenticationClient>();
                     services.AddScoped<ApiReader>();
                     services.AddScoped<WowApiReader>();
+                    services.AddSingleton(apiConfiguration);
                 }).UseConsoleLifetime();
 
             var host = builder.Build();
 
             var reader = host.Services.GetService<WowApiReader>();
 
-            var list = reader.GetAchievementCategoriesAsync().Result;
+            var list = reader.GetConnectedRealmsList().Result;
 
             foreach(var achievement in list)
             {
-                Console.WriteLine(achievement.Name);
+                Console.WriteLine(achievement);
             }
 
             Console.ReadLine();
