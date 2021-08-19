@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 
 namespace WowMythicScanner
@@ -42,9 +43,9 @@ namespace WowMythicScanner
 
             var list = reader.GetConnectedRealmsList().Result;
 
-            foreach(var achievement in list)
+            foreach(var data in list)
             {
-                Console.WriteLine(achievement);
+                Console.WriteLine($@"{data.Id}: {string.Join(",", data.Realms.Select(r => r.Name))}");
             }
 
             Console.ReadLine();

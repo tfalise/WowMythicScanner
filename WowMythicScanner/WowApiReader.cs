@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using WowMythicScanner.Core;
+using WowMythicScanner.Wow;
 
 namespace WowMythicScanner
 {
@@ -31,16 +33,20 @@ namespace WowMythicScanner
             return JsonSerializer.Deserialize<List<AchievementCategory>>(jsonDocument.RootElement.GetProperty("categories").GetRawText(), options);
         }
 
-        public async Task<List<string>> GetConnectedRealmsList()
+        public async Task<List<ConnectedRealm>> GetConnectedRealmsList()
         {
             var content = await apiReader.RequestAsync("/data/wow/connected-realm/index", "dynamic");
             JsonDocument jsonDocument = JsonDocument.Parse(content);
 
-            var realmsList = JsonSerializer.Deserialize<List<HrefItem>>(
-                jsonDocument.RootElement.GetProperty("connected_realms").GetRawText(), 
-                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            var regex = new Regex(@"connected-realm/(\d+)");
 
-            return realmsList.Select(item => item.Href).ToList();
+            return regex.Matches(content).Select(match =>
+            {
+                var connectedRealmId = match.Groups[1].Value;
+                var connectedRealmInfo = apiReader.RequestAsync(@$"/data/wow/connected-realm/{connectedRealmId}", "dynamic").Result;
+                return JsonSerializer.Deserialize<ConnectedRealm>(connectedRealmInfo, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            }
+            ).ToList();
         }
     }
 }
